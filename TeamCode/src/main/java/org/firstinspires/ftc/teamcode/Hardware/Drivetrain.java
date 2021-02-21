@@ -36,6 +36,14 @@ public class Drivetrain {
         setZeroPowerBehavior(right1, DcMotor.ZeroPowerBehavior.BRAKE);
         setZeroPowerBehavior(right2, DcMotor.ZeroPowerBehavior.BRAKE);
         setZeroPowerBehavior(right3, DcMotor.ZeroPowerBehavior.BRAKE);
+
+        setRunMode(left1, DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        setRunMode(left2, DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        setRunMode(left3, DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        setRunMode(right1, DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        setRunMode(right2, DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        setRunMode(right3, DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
     }
 
     /**
@@ -61,6 +69,16 @@ public class Drivetrain {
     }
 
     /**
+     * Sets the runmode of a motor
+     *
+     * @param motor   the target motor
+     * @param runmode the target runmode
+     */
+    void setRunMode(DcMotorEx motor, DcMotor.RunMode runmode) {
+        motor.setMode(runmode);
+    }
+
+    /**
      * Assigns a motor with a null (or other) object to one on the HardwareMap
      *
      * @param motor the motor object to assign
@@ -70,7 +88,7 @@ public class Drivetrain {
         motor = hwMap.get(DcMotorEx.class, name);
     }
 
-    public void setLeftPower (double power) {
+    public void setLeftPower(double power) {
 
         left1.setPower(power);
         left2.setPower(power);
@@ -78,7 +96,7 @@ public class Drivetrain {
 
     }
 
-    public void setRightPower (double power) {
+    public void setRightPower(double power) {
 
         right1.setPower(power);
         right2.setPower(power);
