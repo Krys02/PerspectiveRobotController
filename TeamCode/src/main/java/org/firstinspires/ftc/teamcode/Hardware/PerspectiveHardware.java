@@ -16,7 +16,7 @@ public class PerspectiveHardware {
 
         hwMap = ahwMap;
 
-        // Initialize the drivetrain
+        // Init the drivetrain
         drivetrain = new Drivetrain(hwMap);
         drivetrain.init();
 
@@ -25,5 +25,7 @@ public class PerspectiveHardware {
         intake.init();
 
     }
+
+
 
 }
