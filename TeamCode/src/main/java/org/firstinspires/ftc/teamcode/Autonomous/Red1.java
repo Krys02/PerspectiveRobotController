@@ -22,7 +22,7 @@ public class Red1 extends LinearOpMode {
 
     private double globalAngle, correction;
 
-    // TODO find ticks per by maths or empirically
+    // TODO: find ticks per by maths or empirically
     private final int ticksPerIN = 0;
 
     private final int encoderError = 0;
@@ -43,7 +43,7 @@ public class Red1 extends LinearOpMode {
 
         resetAngle();
 
-        // TODO write this lol
+        // TODO: write this lol
 
 
     }

@@ -9,17 +9,12 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-
 public class PerspectiveHardware {
 
     HardwareMap hwMap = null;
 
     //IMU stuffs
     public BNO055IMU imu;
-    Orientation angles;
-    Acceleration gravity;
 
     public DcMotorEx left1 = null;
     public DcMotorEx left2 = null;
