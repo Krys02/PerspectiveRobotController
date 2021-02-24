@@ -40,8 +40,6 @@ public class VisionTest extends LinearOpMode {
             telemetry.addData("Theoretical max FPS", h.webcam.getCurrentPipelineMaxFps());
             telemetry.update();
 
-            /* TODO create active webcam telemetry */
-
             telemetry.addData("Analysis", pipeline.getAnalysis());
             telemetry.addData("Position", pipeline.position);
             telemetry.update();
