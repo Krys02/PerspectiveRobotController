@@ -2,12 +2,8 @@ package org.firstinspires.ftc.teamcode.Teleop;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.Hardware.MyGamepad;
 import org.firstinspires.ftc.teamcode.Hardware.PerspectiveHardware;
 
 @TeleOp(name = "Teleop", group = "Final")
@@ -78,7 +74,7 @@ public class Teleop extends OpMode {
 
     public void loop() {
 
-        setLeftPower(-gamepad1.left_stick_y + gamepad1.right_stick_x);
+        setLeftPower(gamepad1.left_stick_y - gamepad1.right_stick_x);
         setRightPower(gamepad1.left_stick_y + gamepad1.right_stick_x);
 
         intakeSpeed = gamepad1.right_trigger > 0 ? -1 : gamepad1.left_trigger > 0 ? 1 : 0;

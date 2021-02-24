@@ -1,13 +1,25 @@
 package org.firstinspires.ftc.teamcode.Hardware;
 
+import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 public class PerspectiveHardware {
 
     HardwareMap hwMap = null;
+
+    //IMU stuffs
+    public BNO055IMU imu;
+    Orientation angles;
+    Acceleration gravity;
 
     public DcMotorEx left1 = null;
     public DcMotorEx left2 = null;
@@ -46,6 +58,14 @@ public class PerspectiveHardware {
         right2 = hwMap.get(DcMotorEx.class, "right2");
         right3 = hwMap.get(DcMotorEx.class, "right3");
 
+        left1.setDirection(DcMotorSimple.Direction.REVERSE);
+        left2.setDirection(DcMotorSimple.Direction.REVERSE);
+        left3.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        right1.setDirection(DcMotorSimple.Direction.FORWARD);
+        right2.setDirection(DcMotorSimple.Direction.FORWARD);
+        right3.setDirection(DcMotorSimple.Direction.FORWARD);
+
         shoot1 = hwMap.get(DcMotorEx.class, "shoot1");
         shoot2 = hwMap.get(DcMotorEx.class, "shoot2");
 
@@ -62,8 +82,49 @@ public class PerspectiveHardware {
 
         shootTilt = hwMap.get(Servo.class, "shootTilt");
 
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
+        parameters.loggingEnabled = true;
+        parameters.loggingTag = "IMU";
+        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
+
+        // Retrieve and initialize the IMU. We expect the IMU to be attached to an I2C port
+        // on a Core Device Interface Module, configured to be a sensor of type "AdaFruit IMU",
+        // and named "imu".
+        imu = hwMap.get(BNO055IMU.class, "imu");
+        imu.initialize(parameters);
+
     }
 
+    public void leftMotorPower(double power) {
 
+        left1.setPower(power);
+        left2.setPower(power);
+        left3.setPower(power);
+
+    }
+
+    public void rightMotorPower(double power) {
+
+        right1.setPower(power);
+        right2.setPower(power);
+        right3.setPower(power);
+
+    }
+
+    public void resetEncoders() {
+        // TODO determine which motors have the encoders on them.
+        left1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        right1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        left1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        right1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
+
+    public int getEncoderPosition() {
+        return (int) (left1.getCurrentPosition() + right1.getCurrentPosition() / 2.0);
+    }
 
 }
