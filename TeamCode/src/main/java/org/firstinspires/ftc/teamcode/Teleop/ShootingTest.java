@@ -6,10 +6,10 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@TeleOp(name="Shooting test", group="Tests")
+@TeleOp(name = "Shooting test", group = "Tests")
 public class ShootingTest extends OpMode {
 
-    double hopperPos, shooterPos;
+    double hopperPos = 0.5, shooterPos = 0.5;
 
     public Servo hopper = null;
 
@@ -80,7 +80,7 @@ public class ShootingTest extends OpMode {
         shootTilt.setPosition(shooterPos);
 
         if (gamepad1.right_bumper) {
-            shootVelocity(1600);
+            shootVelocity(1550);
         }
         if (gamepad1.left_bumper){
             shootVelocity(0);
