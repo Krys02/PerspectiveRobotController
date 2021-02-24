@@ -9,12 +9,18 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+
 public class PerspectiveHardware {
 
     HardwareMap hwMap = null;
 
     //IMU stuffs
     public BNO055IMU imu;
+
+    public OpenCvCamera webcam;
 
     public DcMotorEx left1 = null;
     public DcMotorEx left2 = null;
@@ -45,6 +51,9 @@ public class PerspectiveHardware {
     public void init(HardwareMap ahwMap) {
 
         hwMap = ahwMap;
+
+        int cameraMonitorViewId = hwMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hwMap.appContext.getPackageName());
+        webcam = OpenCvCameraFactory.getInstance().createWebcam(hwMap.get(WebcamName.class, "Webcam"), cameraMonitorViewId);
 
         left1 = hwMap.get(DcMotorEx.class, "left1");
         left2 = hwMap.get(DcMotorEx.class, "left2");
