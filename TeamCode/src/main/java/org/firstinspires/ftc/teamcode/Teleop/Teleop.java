@@ -1,0 +1,268 @@
+package org.firstinspires.ftc.teamcode.Teleop;
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.teamcode.Hardware.PerspectiveHardware;
+
+@TeleOp(name = "Teleop", group = "Final")
+public class Teleop extends OpMode {
+
+    // This is an array, index 0 is the hopper pos, index 1 is the shooter pos
+    public double[] highGoalShotPosition = {0, 0};
+    public double[] powerShotPosition = {0, 0};
+    public double shooterBottom = 0.25;
+    public double intakeSpeed = 0.0;
+    /**
+     * This array holds the wobble arm positions. index zero holds the position for the servo with just the gear,
+     * index one holds the position for the servo with the arm attached.
+     **/
+    public double[] wobbleArmPosition = {0, 0};
+    // This array holds claw positions, index 0 is open, index 1 is closed.
+    public double[] wobbleClawPosition = {0, 0};
+    public boolean shooting = false;
+    public int[] shootingVelocity = {0, 0};
+    public ShotType shot = ShotType.HIGH_GOAL;
+    public ShotPosition position = ShotPosition.RED_STRAIGHT;
+    PerspectiveHardware h = new PerspectiveHardware();
+    ElapsedTime timer = new ElapsedTime();
+    /**
+     * Red wall shots | high goal is (0.88, 0.49), velocity is 1500 tps | power shots are (0.82, 0.36), velocity is 1520 tps
+     * Red straight shots | high goal is (0.87, 0.48), velocity is 1520 tps | power shots are (0.82, 0.38), velocity is 1520 tps
+     */
+
+    boolean xPressed = false;
+    boolean aPressed = false;
+    boolean yPressed = false;
+    boolean wobbleDown = false;
+    boolean wobbleGripped = false;
+    boolean leftBumpPressed = false, rightBumpPressed = false;
+    boolean flickerActuated = false;
+    ElapsedTime flickerTime = new ElapsedTime();
+    double flickTime = 0.25;
+    boolean flicking = false;
+
+    public void init() {
+
+        h.init(hardwareMap);
+        h.hopper.setPosition(0);
+        h.flicker.setPosition(0);
+        h.shootTilt.setPosition(shooterBottom);
+
+    }
+
+    public void init_loop() {
+
+        telemetry.addLine("Waiting for start");
+        telemetry.addData("Waiting time", ((int) (timer.seconds() / 60) < 10 ? 0 : "").toString() + (int) (timer.seconds() / 60) + ":" + ((timer.seconds() % 60) < 10 ? 0 : "") + (int) (timer.seconds() % 60));
+
+    }
+
+    public void start() {
+
+        timer.reset();
+
+    }
+
+    public void loop() {
+
+        getShotPosition();
+
+        if (gamepad1.x && !xPressed) {
+            xPressed = true;
+            wobbleDown = !wobbleDown;
+        }
+        if (!gamepad1.x) {
+            xPressed = false;
+        }
+        h.wobbleArmPosition(wobbleDown ? wobbleArmPosition[1] : wobbleArmPosition[0]);
+
+        if (gamepad1.y && !yPressed) {
+            yPressed = true;
+            wobbleGripped = !wobbleGripped;
+        }
+        if (!gamepad1.y) {
+            yPressed = false;
+        }
+        h.wobbleClaw.setPosition(wobbleGripped ? wobbleClawPosition[1] : wobbleClawPosition[0]);
+
+        setLeftPower(gamepad1.left_stick_y - gamepad1.right_stick_x);
+        setRightPower(gamepad1.left_stick_y + gamepad1.right_stick_x);
+
+        intakeSpeed = gamepad1.right_trigger > 0.1 ? -1 : gamepad1.left_trigger > 0.1 ? 1 : 0;
+        intakePower(intakeSpeed);
+        // High goal shot
+        if (gamepad1.right_bumper && !rightBumpPressed) {
+            rightBumpPressed = true;
+            if (!shooting) {
+                readyShot(ShotType.HIGH_GOAL);
+            } else {
+                shooterRest();
+            }
+        }
+        if (!gamepad1.right_bumper) {
+            rightBumpPressed = false;
+        }
+        // Powershot shot
+        if (gamepad1.left_bumper && !leftBumpPressed) {
+            leftBumpPressed = true;
+            if (!shooting) {
+                readyShot(ShotType.POWER_SHOT);
+            } else {
+                shooterRest();
+            }
+        }
+        if (!gamepad1.left_bumper) {
+            leftBumpPressed = false;
+        }
+
+        if (shooting) {
+            shootVelocity(shot == ShotType.HIGH_GOAL ? shootingVelocity[0] : shootingVelocity[1]);
+        } else {
+            shootVelocity(0);
+        }
+
+        if (shooting) {
+            if (gamepad1.a && !aPressed && !flicking) {
+                aPressed = true;
+                flickerTime.reset();
+                flicking = true;
+            }
+        }
+        if (flicking) {
+            if (flickerTime.seconds() > flickTime) {
+                flicking = false;
+                flickerActuated = false;
+            } else {
+                flickerActuated = true;
+            }
+        }
+
+
+        if (!gamepad1.a) {
+            aPressed = false;
+        }
+        h.flicker.setPosition(flickerActuated ? 1 : 0);
+
+        telemetry.addData("Status", "Running");
+        telemetry.addLine();
+        telemetry.addData("Current Shot", position.toString() + " / " + shot.toString());
+        telemetry.addLine();
+        telemetry.addData("Shooter Speed", Math.abs(h.shoot1.getVelocity()));
+        if (shot == ShotType.HIGH_GOAL) {
+            telemetry.addData("Target Speed", shootingVelocity[0]);
+            telemetry.addData("Shooter Status", (
+                    Math.abs(h.shoot1.getVelocity() - shootingVelocity[0]) > 40 ? "NOT READY" : "READY, Press 'a' to fire"
+            ));
+        } else {
+            telemetry.addData("Target Speed", shootingVelocity[1]);
+            telemetry.addData("Shooter Status", (
+                    Math.abs(h.shoot1.getVelocity() - shootingVelocity[1]) > 40 ? "NOT READY" : "READY, Press 'a' to fire"
+            ));
+        }
+        telemetry.addLine();
+        telemetry.addData("Elapsed time", ((int) (timer.seconds() / 60) < 10 ? 0 : "").toString() + (int) (timer.seconds() / 60) + ":" + ((timer.seconds() % 60) < 10 ? 0 : "") + (int) (timer.seconds() % 60));
+
+    }
+
+    public void stop() {
+
+    }
+
+    public void setLeftPower(double power) {
+
+        h.left1.setPower(power);
+        h.left2.setPower(power);
+        h.left3.setPower(power);
+
+    }
+
+    public void setRightPower(double power) {
+
+        h.right1.setPower(power);
+        h.right2.setPower(power);
+        h.right3.setPower(power);
+
+    }
+
+    public void intakePower(double power) {
+
+        h.in1.setPower(power);
+        h.in2.setPower(-power);
+
+    }
+
+    public void readyShot(ShotType type) {
+
+        switch (position) {
+            case RED_WALL:
+                setShot(0.88, 0.49, 1500,
+                        0.82, 0.36, 1520);
+                break;
+            case RED_STRAIGHT:
+                setShot(0.87, 0.48, 1520,
+                        0.82, 0.38, 1520);
+                break;
+        }
+
+        if (type == ShotType.POWER_SHOT) {
+            shot = ShotType.POWER_SHOT;
+            h.hopper.setPosition(powerShotPosition[0]);
+            h.shootTilt.setPosition(powerShotPosition[1]);
+            shooting = true;
+        } else if (type == ShotType.HIGH_GOAL) {
+            shot = ShotType.HIGH_GOAL;
+            h.hopper.setPosition(highGoalShotPosition[0]);
+            h.shootTilt.setPosition(highGoalShotPosition[1]);
+            shooting = true;
+        }
+    }
+
+    public void shooterRest() {
+        h.hopper.setPosition(0);
+        h.shootTilt.setPosition(shooterBottom);
+        shootingVelocity[0] = 0;
+        shootingVelocity[1] = 0;
+        shot = ShotType.IDLE;
+        shooting = false;
+    }
+
+    public void shootVelocity(int velocity) {
+
+        h.shoot1.setVelocity(velocity);
+        h.shoot2.setVelocity(-velocity);
+
+    }
+
+    public void setShot(double highGoalHopper, double highGoalShooter, int highGoalVelocity,
+                        double powerShotHopper, double powerShotShooter, int powerShotVelocity) {
+
+        highGoalShotPosition[0] = highGoalHopper;
+        highGoalShotPosition[1] = highGoalShooter;
+        shootingVelocity[0] = highGoalVelocity;
+        powerShotPosition[0] = powerShotHopper;
+        powerShotPosition[1] = powerShotShooter;
+        shootingVelocity[1] = powerShotVelocity;
+
+    }
+
+    public void getShotPosition() {
+        if (gamepad1.dpad_right)
+            position = ShotPosition.RED_WALL;
+        if (gamepad1.dpad_down)
+            position = ShotPosition.RED_STRAIGHT;
+    }
+
+    enum ShotType {
+        HIGH_GOAL,
+        POWER_SHOT,
+        IDLE
+    }
+
+    enum ShotPosition {
+        RED_WALL,
+        RED_STRAIGHT,
+        RED_CROSS // TODO set upo red cross shot
+    }
+}
