@@ -18,27 +18,27 @@ public class WobbleTest extends OpMode {
 
     public void loop() {
 
-        if (gamepad1.a) {
-            h.wobbleArmPosition(0.2);
+        if (gamepad1.a) { // UP
+            h.wobbleArmPosition(0.24);
         }
-        if (gamepad1.b) {
-            h.wobbleArmPosition(0.33);
+        if (gamepad1.b) { // DROPPING
+            h.wobbleArmPosition(0.39);
         }
-        if (gamepad1.y) {
-            h.wobbleArmPosition(0.66);
+        if (gamepad1.y) { // DOWN
+            h.wobbleArmPosition(0.92);
         }
         if (gamepad1.x) {
             h.wobbleArmPosition(0.57);
         }
 
         if (gamepad1.left_bumper) {
-
-            h.wobbleClaw.setPosition(0);
+            // OPEN
+            h.wobbleClaw.setPosition(0.6);
 
         }
         if (gamepad1.right_bumper) {
-
-            h.wobbleClaw.setPosition(1);
+            // CLOSED
+            h.wobbleClaw.setPosition(0.92);
 
         }
 

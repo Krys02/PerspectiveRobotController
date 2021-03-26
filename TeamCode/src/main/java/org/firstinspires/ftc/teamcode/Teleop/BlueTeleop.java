@@ -289,12 +289,12 @@ public class BlueTeleop extends OpMode {
                 break;
             case 4:
                 wobbleState = WobbleState.DOWN_TO_RELEASE;
-                h.wobbleArmPosition(0.3);
+                h.wobbleArmVertical();
                 h.wobbleGrip();
                 break;
             case 5:
                 wobbleState = WobbleState.DOWN_RELEASED;
-                h.wobbleArmPosition(0.3);
+                h.wobbleArmVertical();
                 h.wobbleRelease();
                 break;
         }

@@ -141,19 +141,23 @@ public class PerspectiveHardware {
     }
 
     public void wobbleArmUp() {
-        wobbleArmPosition(0.18);
+        wobbleArmPosition(0.24);
     }
 
     public void wobbleArmDown() {
-        wobbleArmPosition(0.57);
+        wobbleArmPosition(0.92);
+    }
+
+    public void wobbleArmVertical() {
+        wobbleArmPosition(0.39);
     }
 
     public void wobbleGrip() {
-        wobbleClaw.setPosition(0);
+        wobbleClaw.setPosition(0.92);
     }
 
     public void wobbleRelease() {
-        wobbleClaw.setPosition(1);
+        wobbleClaw.setPosition(0.57);
     }
 
 }
