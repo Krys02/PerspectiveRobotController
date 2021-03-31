@@ -8,70 +8,161 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.Hardware.PerspectiveHardware;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvCameraRotation;
 
 @Autonomous(name = "Red Power Shots And Wobble", group = "Final")
 public class RedPowerShotsAndWobble extends LinearOpMode {
 
-    public double[] highGoalShotPosition = {0.88, 0.47};
-    public double[] powerShotPosition = {0.8, 0.35};
-    public double shooterBottom = 0.25;
-    public double hopperBottom = 0;
     PerspectiveHardware h = new PerspectiveHardware();
     ElapsedTime timer = new ElapsedTime();
     ElapsedTime runtime = new ElapsedTime();
     private double globalAngle, correction;
     private Orientation lastAngles = new Orientation();
 
+    OpenCvCamera webcam;
+    RedPipeline pipeline;
+
+    Randomization stack = Randomization.NONE;
+
+    public double shooterBottom = 0.25;
+    public double hopperBottom = 0;
+
     @Override
     public void runOpMode() {
 
         h.init(hardwareMap);
         h.setZeroBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        h.hopper.setPosition(0.81);
         timer.reset();
         h.flicker.setPosition(0);
         h.wobbleArmUp();
         h.wobbleGrip();
-        waitForStart();
+
+        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
+        pipeline = new RedPipeline();
+        webcam.setPipeline(pipeline);
+
+        webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
+        {
+            @Override
+            public void onOpened()
+            {
+                webcam.startStreaming(320,240, OpenCvCameraRotation.UPSIDE_DOWN);
+            }
+        });
+
+        while(!isStarted() && !isStopRequested()) {
+            telemetry.addData("Analysis", pipeline.getAnalysis());
+            telemetry.addData("Randomization", pipeline.getRandomization());
+            telemetry.update();
+        }
+        stack = pipeline.getRandomization();
 
         resetAngle();
 
-        drive(60, 0.7f, 5);
-        h.shootTilt.setPosition(0.36);
-        shootVelocity(1480);
-        rotateForSecs(-17, 1, 0.8f);
+        shootVelocity(600);
+        h.hopper.setPosition(0.85);
+        drive(60, 1f, 5);
+        shootVelocity(1350);
+        h.hopper.setPosition(0.85);
+        h.shootTilt.setPosition(0.44);
+        rotateForSecs(12, 1f, 1); // 12
         h.flicker.setPosition(1);
         sleep(250);
+        h.flicker.setPosition(0);
+        h.flicker.setPosition(0);
+        h.flicker.setPosition   (0);
+
+        h.hopper.setPosition(0.89);
+        h.shootTilt.setPosition(0.47);
+
+        rotateForSecs(7, 1f, 1); // 17
+        h.hopper.setPosition(0.89);
+        h.shootTilt.setPosition(0.47);
+        h.flicker.setPosition(1);
+        sleep(250);
+        h.flicker.setPosition(0);
+        h.flicker.setPosition(0);
         h.flicker.setPosition(0);
 
-        rotateForSecs(-7, 0.4f, 0.8f);
+        h.hopper.setPosition(0.87);
+        h.shootTilt.setPosition(0.45);
+        rotateForSecs(-24, 1f, 1); // -7
+        h.hopper.setPosition(0.87);
+        h.shootTilt.setPosition(0.45);
         h.flicker.setPosition(1);
         sleep(250);
+        h.flicker.setPosition(0);
+        h.flicker.setPosition(0);
         h.flicker.setPosition(0);
 
-        rotateForSecs(-5, 0.4f, 0.8f);
-        h.flicker.setPosition(1);
-        sleep(250);
-        h.flicker.setPosition(0);
-        rotateForSecs(29, 0.4f, 0.8f);
         h.shootTilt.setPosition(shooterBottom);
+        h.hopper.setPosition(hopperBottom);
         shootVelocity(0);
 
-        drive(40, 0.7f, 5);
-        globalAngle += 30;
-        drive(15, 0.7f, 5);
-        globalAngle -= 30;
-        h.wobbleArmDown();
-        sleep(250);
-        h.wobbleRelease();
-        sleep(50);
-        h.wobbleArmUp();
-        drive(-40, 1f, 4);
+        switch (stack) {
+            case FOUR:
+                rotateForSecs(42, 1, 1);
+                drive(60, 1, 5);
+                h.wobbleArmDown();
+                sleep(500);
+                h.wobbleRelease();
+                sleep(100);
+                drive(-5, 1, 1);
+                h.wobbleArmUp();
+                h.wobbleGrip();
+                rotateForSecs(30, 0.5f, 1);
+                h.wobbleArmUp();
+                h.wobbleGrip();
+                drive(-70, 1, 5);
+                break;
+            case ONE:
+                rotateForSecs(37, 1, 1);
+                drive(30, 1, 5);
+                h.wobbleArmDown();
+                sleep(500);
+                h.wobbleRelease();
+                sleep(100);
+                drive(-5, 1, 1);
+                h.wobbleArmUp();
+                h.wobbleGrip();
+                rotateForSecs(45, 0.5f, 1);
+                h.wobbleArmUp();
+                h.wobbleGrip();
+                drive(-35, 1, 5);
+                break;
+            case NONE:
+                rotateForSecs(5, 1f, 1); // -7
+                drive (40, 1, 3);
+                rotateForSecs(90, 1.25f, 1);
+                drive(40, 1, 3);
+                rotateForSecs(90, 1.25f, 1);
+                drive(5, 1, 1);
+                h.wobbleArmDown();
+                sleep(500);
+                h.wobbleRelease();
+                sleep(100);
+                drive(-5, 1, 1);
+                h.wobbleArmUp();
+                h.wobbleGrip();
+                sleep(200);
+                h.wobbleArmUp();
+                h.wobbleGrip();
+                rotateForSecs(-90, 1.25f, 1);
+                drive(-50, 1, 3);
+                rotateForSecs(-90, 1.25f, 1);
+                drive(-25, 1, 3);
+
+                break;
+        }
 
     }
 
@@ -93,7 +184,7 @@ public class RedPowerShotsAndWobble extends LinearOpMode {
     }
 
     private double rotatePower() {
-        double power, angle, gain = 0.02, /* CHANGE THE GAIN TO CHANGE THE SENSITIVITY */ minPower = 0.1;
+        double power, angle, gain = 0.025, /* CHANGE THE GAIN TO CHANGE THE SENSITIVITY */ minPower = 0.1;
         angle = getAngle();
         power = angle;             // no adjustment.
         power = power * gain;
@@ -135,7 +226,7 @@ public class RedPowerShotsAndWobble extends LinearOpMode {
         }
         targetTicks = Math.abs(targetTicks);
         int encoderError = 0;
-        double minDrivePower = 0.2;
+        double minDrivePower = 0.25;
         double ticks;
         double scale = (maxPower - minDrivePower) / (0.8 * targetTicks);
         double ticksToTrav;
