@@ -13,7 +13,7 @@ public class BluePipeline extends OpenCvPipeline
     /*
      * An enum to define the skystone position
      */
-    Randomization randomization = Randomization.NONE;
+    int rings = 0;
 
     /*
      * Some color constants
@@ -94,11 +94,11 @@ public class BluePipeline extends OpenCvPipeline
 
         position = Randomization.NONE; // Record our analysis
         if(avg1 > FOUR_RING_THRESHOLD){
-            randomization = Randomization.FOUR;
+            rings = 4;
         }else if (avg1 > ONE_RING_THRESHOLD){
-            randomization = Randomization.ONE;
+            rings = 1;
         }else{
-            randomization = Randomization.NONE;
+            rings = 0;
         }
 
 //            Imgproc.rectangle(
@@ -111,12 +111,11 @@ public class BluePipeline extends OpenCvPipeline
         return input;
     }
 
-    public int getAnalysis()
-    {
+    public int getAnalysis() {
         return avg1;
     }
 
-    public Randomization getRandomization(){
-        return randomization;
+    public int getRandomization() {
+        return rings;
     }
 }

@@ -25,31 +25,24 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvInternalCamera;
-import org.openftc.easyopencv.OpenCvPipeline;
 
 @TeleOp(name = "check cam", group = "test")
-public class EasyOpenCVExample extends LinearOpMode
-{
+public class EasyOpenCVExample extends LinearOpMode {
+    /* ~~ ~~ */
     OpenCvCamera webcam;
-    SkystoneDeterminationPipeline pipeline;
+    BluePipeline pipeline;
+    int stackRings = 0;
+    /* ~~ ~~ */
 
     @Override
-    public void runOpMode()
-    {
+    public void runOpMode() {
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
-        pipeline = new SkystoneDeterminationPipeline();
+        pipeline = new BluePipeline();
         webcam.setPipeline(pipeline);
 
         // We set the viewport policy to optimized view so the preview doesn't appear 90 deg
@@ -57,139 +50,32 @@ public class EasyOpenCVExample extends LinearOpMode
         // landscape orientation, though.
 //        webcam.setViewportRenderingPolicy(OpenCvCamera.ViewportRenderingPolicy.OPTIMIZE_VIEW);
 
-        webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
-        {
+        webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
-            public void onOpened()
-            {
-                webcam.startStreaming(320,240, OpenCvCameraRotation.UPSIDE_DOWN);
+            public void onOpened() {
+                webcam.startStreaming(320, 240, OpenCvCameraRotation.UPSIDE_DOWN);
             }
         });
 
-        while(!isStarted()) {
+        // By calling !isStarted in a while loop, we can constantly update our analysis, which means we will save
+        // the ring configuration when the driver presses the start button
+        while (!isStarted() && !isStopRequested()) {
             telemetry.addData("Analysis", pipeline.getAnalysis());
             telemetry.addData("Randomization", pipeline.getRandomization());
             telemetry.update();
         }
+        // We store the randomization immediately when the driver presses start.
+        stackRings = pipeline.getRandomization();
 
-        waitForStart();
 
-        while (opModeIsActive())
-        {
+        // This is just for this sample opmode, your actual auto code would be below this.
+        while (opModeIsActive()) {
             telemetry.addData("Analysis", pipeline.getAnalysis());
-            telemetry.addData("Position", pipeline.position);
+            telemetry.addData("Randomization", pipeline.getRandomization());
             telemetry.update();
 
             // Don't burn CPU cycles busy-looping in this sample
             sleep(50);
-        }
-    }
-
-    public static class SkystoneDeterminationPipeline extends OpenCvPipeline
-    {
-        /*
-         * An enum to define the skystone position
-         */
-        Randomization randomization = Randomization.NONE;
-
-        /*
-         * Some color constants
-         */
-        static final Scalar BLUE = new Scalar(0, 0, 255);
-        static final Scalar GREEN = new Scalar(0, 255, 0);
-
-        /*
-         * The core values which define the location and size of the sample regions
-         */
-        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(220,120 - (75/2));
-
-        static final int REGION_WIDTH = 50;
-        static final int REGION_HEIGHT = 75;
-
-        final int FOUR_RING_THRESHOLD = 80;
-        final int ONE_RING_THRESHOLD = 25;
-
-        Point region1_pointA = new Point(
-                REGION1_TOPLEFT_ANCHOR_POINT.x,
-                REGION1_TOPLEFT_ANCHOR_POINT.y);
-        Point region1_pointB = new Point(
-                REGION1_TOPLEFT_ANCHOR_POINT.x + REGION_WIDTH,
-                REGION1_TOPLEFT_ANCHOR_POINT.y + REGION_HEIGHT);
-
-        /*
-         * Working variables
-         */
-        Mat region1_Cb;
-        Mat YCrCb = new Mat();
-        Mat Cb = new Mat();
-        int avg1;
-
-        // Volatile since accessed by OpMode thread w/o synchronization
-        private volatile Randomization position = Randomization.NONE;
-
-        /*
-         * This function takes the RGB frame, converts to YCrCb,
-         * and extracts the Cb channel to the 'Cb' variable
-         */
-        void inputToCb(Mat input){
-            Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
-            Core.extractChannel(YCrCb, Cb, 1);
-        }
-
-        Mat region;
-        Mat HSV = new Mat();
-        void inputToHSV(Mat input){
-            Imgproc.cvtColor(input, HSV, Imgproc.COLOR_RGB2HSV);
-        }
-
-
-
-        @Override
-        public void init(Mat firstFrame){
-            inputToHSV(firstFrame);
-
-            region = HSV.submat(new Rect(region1_pointA, region1_pointB));
-        }
-
-        @Override
-        public Mat processFrame(Mat input){
-            inputToHSV(input);
-
-            avg1 = (int) Core.mean(region).val[1];
-
-            Imgproc.rectangle(
-                    input, // Buffer to draw on
-                    region1_pointA, // First point which defines the rectangle
-                    region1_pointB, // Second point which defines the rectangle
-                    GREEN, // The color the rectangle is drawn in
-                    3); // Thickness of  rectangle lines
-
-            position = Randomization.NONE; // Record our analysis
-            if(avg1 > FOUR_RING_THRESHOLD){
-                randomization = Randomization.FOUR;
-            }else if (avg1 > ONE_RING_THRESHOLD){
-                randomization = Randomization.ONE;
-            }else{
-                randomization = Randomization.NONE;
-            }
-
-//            Imgproc.rectangle(
-//                    input, // Buffer to draw on
-//                    region1_pointA, // First point which defines the rectangle
-//                    region1_pointB, // Second point which defines the rectangle
-//                    GREEN, // The color the rectangle is drawn in
-//                    -1); // Negative thickness means solid fill
-
-            return input;
-        }
-
-        public int getAnalysis()
-        {
-            return avg1;
-        }
-
-        public Randomization getRandomization(){
-            return randomization;
         }
     }
 }
